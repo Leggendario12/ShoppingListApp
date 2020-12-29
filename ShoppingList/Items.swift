@@ -16,6 +16,7 @@ class Item: Codable {
         self.isChecked = isChecked
     }
     
+    // Generate fake items
     static func fake(_ count: Int) -> [Item] {
         var items = [Item]()
         for i in 0...count {
@@ -36,8 +37,8 @@ class Item: Codable {
 }
 
 
-// Extension to load the
-extension Array where Element == Item {
+// Extension to load the saving the object property data
+extension Array where Element == ShoppingList {
     func save() {
         let data = try? PropertyListEncoder().encode(self)
         UserDefaults.standard.set(data, forKey: String(describing:
@@ -46,8 +47,12 @@ extension Array where Element == Item {
     }
     static func load() -> [Element] {
         if let data = UserDefaults.standard.value(forKey: String(describing: Element.self)) as? Data,
-           let items = try? PropertyListDecoder().decode([Element].self, from: data){
-            return items
+           let elements = try? PropertyListDecoder().decode([Element].self, from: data){
+            for element in elements {
+                element.onUpdate = elements.save
+            }
+            return elements
+            
         }
         return []
     }

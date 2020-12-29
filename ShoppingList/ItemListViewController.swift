@@ -7,18 +7,24 @@
 
 import UIKit
 
-class ItemListViewController: UITableViewController {
-    @IBOutlet weak var itemCount: UILabel!
-    var items: [Item] = [Item].load() {
-        didSet {
-            items.save()
+class ItemListViewController: BaseTableViewController {
+ 
+    
+    var list: ShoppingList!
+    var items: [Item] {
+        get {
+            // Update the count on the number of items
+            return list.items
         }
     }
+    
+   
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.title = "Shopping List Items"
+        self.title = list.name
         self.navigationController?.navigationBar.prefersLargeTitles = true
-        self.itemCount.text = "Items Count: \(self.items.count)"
+ 
         
         // Adding right bar button item
         self.navigationItem.rightBarButtonItems?.append(editButtonItem)
@@ -28,6 +34,17 @@ class ItemListViewController: UITableViewController {
 
         // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
         // self.navigationItem.rightBarButtonItem = self.editButtonItem
+    }
+    
+    
+    @IBAction func didSelectAdd(_ sender: UIBarButtonItem) {
+        requestInput(title: "New shopping list item", message: "Enter item to add to the shopping list:", handler: {(itemName) in let itemCount = self.items.count;
+            let item = Item(name: itemName)
+            self.list.add(item)
+            // Insert the items on the corresponding rows
+            self.tableView.insertRows(at: [IndexPath(row: itemCount, section: 0)], with: .top)
+        })
+
     }
 
     // MARK: - Table view data source
@@ -60,24 +77,6 @@ class ItemListViewController: UITableViewController {
         return cell
     }
 
-    @IBAction func didSelectAdd(_ sender: UIBarButtonItem) {
-        let alert = UIAlertController(title: "New shopping list Item", message: "Enter item to add to the shopping list:", preferredStyle: .alert)
-        alert.addTextField(configurationHandler: nil)
-        
-        alert.addAction(UIAlertAction(title:"Cancel", style: .cancel, handler: nil))
-        
-        alert.addAction(UIAlertAction(title: "Add", style: .default, handler: {(_) in
-            if let itemName = alert.textFields?[0].text {
-                let itemCount = self.items.count;
-                let item = Item(name: itemName)
-                self.items.append(item)
-                self.tableView.insertRows(at: [IndexPath(row: itemCount, section: 0)], with: .top)
-            }
-            
-        }))
-        self.present(alert, animated: true, completion: nil)
-        
-    }
     
     
     // Override to support conditional editing of the table view.
@@ -91,7 +90,7 @@ class ItemListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             // Delete the row from the data source
-            items.remove(at: indexPath.row)
+            list.remove(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .fade)
         } else if editingStyle == .insert {
             // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
@@ -101,8 +100,8 @@ class ItemListViewController: UITableViewController {
 
     // Override to support rearranging the table view.
     override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
-        let item = items.remove(at: fromIndexPath.row)
-        items.insert(item, at: to.row)
+        list.remove(at: fromIndexPath.row)
+        list.swapItem(fromIndexPath.row, to.row)
     }
 
 
@@ -117,14 +116,14 @@ class ItemListViewController: UITableViewController {
         return true
     }
     
+    
     // Select the item
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath:IndexPath) {
-        let item = items[indexPath.row]
-        item.isChecked = !item.isChecked
-        tableView.reloadRows(at: [indexPath], with: .middle)
-    }
-    
-    /*
+        list.toggleCheckItem(atIndex: indexPath.row)
+          tableView.reloadRows(at: [indexPath], with: .middle)
+        }
+
+     
     // MARK: - Navigation
 
     // In a storyboard-based application, you will often want to do a little preparation before navigation
@@ -132,6 +131,6 @@ class ItemListViewController: UITableViewController {
         // Get the new view controller using segue.destination.
         // Pass the selected object to the new view controller.
     }
-    */
+    
 
 }
