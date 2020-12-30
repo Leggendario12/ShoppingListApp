@@ -18,8 +18,6 @@ class ItemListViewController: BaseTableViewController {
         }
     }
     
-   
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = list.name
